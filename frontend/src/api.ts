@@ -1,0 +1,43 @@
+import axios from 'axios';
+
+const api = axios.create({
+    baseURL: 'http://localhost:8000/api',
+});
+
+export interface Person {
+    id: number;
+    name: string;
+    birthday?: string;
+    group_name?: string;
+    affection_score: number;
+    tags?: string;
+    preferences?: string;
+    similarities_and_differences?: string;
+    completeness_score: number;
+    needs_verification?: string;
+    archive_mode: boolean;
+    interactions: any[];
+}
+
+export interface DashboardData {
+    upcoming_events: Person[];
+    needs_cultivation: Person[];
+}
+
+export const getContacts = async (): Promise<Person[]> => {
+    const response = await api.get('/contacts');
+    return response.data;
+};
+
+export const getDashboard = async (): Promise<DashboardData> => {
+    const response = await api.get('/dashboard');
+    return response.data;
+};
+
+export const verifyContact = async (id: number): Promise<void> => {
+    await api.post(`/contacts/${id}/verify`);
+};
+
+export const deleteContact = async (id: number): Promise<void> => {
+    await api.delete(`/contacts/${id}`);
+};

@@ -1,0 +1,41 @@
+@import "tailwindcss";
+
+@theme {
+  --color-botanical-bg: #E7F5E9;
+  --color-botanical-text: #1A3320;
+  --color-botanical-accent1: #2E7D32;
+  --color-botanical-accent2: #F06292;
+  --color-botanical-seal: #D32F2F;
+
+  --shadow-card: 0 4px 12px rgba(0, 0, 0, 0.05);
+  --shadow-card-hover: 0 8px 16px rgba(0, 0, 0, 0.1);
+  --shadow-wax-seal: inset 0 0 4px rgba(0, 0, 0, 0.4), 0 3px 6px rgba(0, 0, 0, 0.3);
+  --shadow-vintage: inset 0 0 40px rgba(139, 69, 19, 0.08);
+}
+
+@layer base {
+  body {
+    @apply bg-botanical-bg text-botanical-text font-sans antialiased min-h-screen selection:bg-botanical-accent1 selection:text-white;
+  }
+}
+
+.glass-nav {
+  @apply bg-white/40 backdrop-blur-md border-b border-white/20 shadow-sm sticky top-0 z-50;
+}
+
+.glass-card {
+  @apply bg-white/50 backdrop-blur-md border border-white/30 rounded-xl relative transition-all duration-300 shadow-card;
+}
+
+.glass-card:hover {
+  @apply -translate-y-1 shadow-card-hover;
+}
+
+.wax-seal {
+  @apply absolute -top-3 right-6 w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-lg bg-gradient-to-br from-botanical-seal to-red-900 border border-white/10 cursor-pointer shadow-wax-seal;
+}
+
+.vintage-paper {
+  @apply bg-[#FFF9E6] shadow-vintage;
+  background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noise)' opacity='0.08'/%3E%3C/svg%3E");
+}
