@@ -71,14 +71,15 @@ class Person(Base):
         return None
 
 class Interaction(Base):
-    __tablename__ = 'interactions'
+    __tablename__ = "interactions"
 
     id = Column(Integer, primary_key=True, index=True)
-    person_id = Column(Integer, ForeignKey('people.id'), nullable=False)
-    date = Column(Date, nullable=False, default=datetime.utcnow().date)
-    raw_text = Column(Text, nullable=False)
-    quality_score = Column(Integer, nullable=False)
-    tags = Column(Text, nullable=True)
+    person_id = Column(Integer, ForeignKey("people.id"))
+    date = Column(String) # YYYY-MM-DD
+    raw_text = Column(Text)
+    quality_score = Column(Integer) # 1-100
+    mood_score = Column(Integer, default=3) # 1-4
+    tags = Column(String, nullable=True) # comma separated
 
     person = relationship("Person", back_populates="interactions")
 
@@ -98,7 +99,7 @@ def inject_seed_data(session):
             similarities_updated_at=decayed_date,
             affection_score=90,
             group_name="校园科协",
-            tags="潜质,内向,摄影",
+            tags="Flower,潜质,内向,摄影",
             archive_mode=False
         )
         session.add(seed_person)

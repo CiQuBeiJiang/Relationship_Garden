@@ -23,6 +23,8 @@ export default function Manage() {
     const [selectedPerson, setSelectedPerson] = useState('');
     const [logDate, setLogDate] = useState(new Date().toISOString().split('T')[0]);
     const [quality, setQuality] = useState(3);
+    const [mood, setMood] = useState(3);
+    const [interactionType, setInteractionType] = useState('');
     const [rawText, setRawText] = useState('');
 
     useEffect(() => {
@@ -48,7 +50,7 @@ export default function Manage() {
                 preferences: preferences || null,
                 similarities_and_differences: similarities || null
             });
-            setMessage({ type: 'success', text: `✅ 成功记录 / Created: ${name}` });
+            setMessage({ type: 'success', text: `✅ 成功记录` });
             setName('');
             setPreferences('');
             setSimilarities('');
@@ -62,15 +64,22 @@ export default function Manage() {
         e.preventDefault();
         if (!rawText.trim() || !selectedPerson) return;
 
+        // Auto Extract Tags from #hashtags (supports #tag or # tag)
+        const extractedTags = (rawText.match(/#\s*([^\s#]+)/g) || []).map(t => t.replace(/^#\s*/, ''));
+        const finalTags = [interactionType, ...extractedTags].filter(Boolean).join(',');
+
         try {
             await axios.post(`http://localhost:8000/api/interactions?person_id=${selectedPerson}`, {
                 date: logDate,
                 quality_score: quality,
+                mood_score: mood,
                 raw_text: rawText,
-                tags: null
+                tags: finalTags || null
             });
             setMessage({ type: 'success', text: '✅ 互动成功保存 / Log Saved' });
             setRawText('');
+            setInteractionType('');
+            setMood(3);
         } catch (err) {
             setMessage({ type: 'error', text: 'Error Occurred' });
         }
@@ -153,29 +162,72 @@ export default function Manage() {
                                 <label className="block text-sm font-semibold mb-1">{t('manage.date')}</label>
                                 <input type="date" value={logDate} onChange={e => setLogDate(e.target.value)} className="w-full bg-white/60 p-2 rounded-lg border border-botanical-text/20 focus:outline-none focus:ring-2 focus:ring-botanical-accent1" />
                             </div>
-                            <div className="flex-1">
-                                <label className="block text-sm font-semibold mb-1">{t('manage.log_quality')}</label>
-                                <div className="flex gap-1 mt-2">
-                                    {[1, 2, 3, 4, 5].map((star) => (
-                                        <button
-                                            key={star}
-                                            type="button"
-                                            onClick={() => setQuality(star)}
-                                            className="focus:outline-none transition-transform hover:scale-110"
-                                        >
-                                            <Star
-                                                size={24}
-                                                className={`transition-colors ${star <= quality ? "fill-amber-400 text-amber-500 drop-shadow-sm" : "text-botanical-text/20"}`}
-                                            />
-                                        </button>
-                                    ))}
-                                </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-semibold mb-2">🎈 互动类型 (Interaction Type)</label>
+                        <div className="flex flex-wrap gap-2">
+                            {['微信', '电话', '视频', '游戏', '吃饭', '咖啡', '运动', '聚会', '其他'].map(type => (
+                                <button
+                                    key={type}
+                                    type="button"
+                                    onClick={() => setInteractionType(interactionType === type ? '' : type)}
+                                    className={`px-3 py-1 rounded-full text-xs font-bold border transition-colors ${interactionType === type ? 'bg-botanical-accent1 text-white border-botanical-accent1' : 'bg-white/50 text-stone-600 border-stone-200 hover:border-botanical-accent1/50'}`}
+                                >
+                                    {type}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="flex gap-8 items-center bg-white/40 p-4 rounded-xl border border-white/60">
+                        <div>
+                            <label className="block text-sm font-semibold mb-2">🌱 {t('manage.log_quality')}</label>
+                            <div className="flex gap-1">
+                                {[1, 2, 3, 4, 5].map((star) => (
+                                    <button
+                                        key={star}
+                                        type="button"
+                                        onClick={() => setQuality(star)}
+                                        className="focus:outline-none transition-transform hover:scale-110"
+                                    >
+                                        <Star
+                                            size={24}
+                                            className={`transition-colors ${star <= quality ? "fill-amber-400 text-amber-500 drop-shadow-sm" : "text-botanical-text/20"}`}
+                                        />
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                        <div className="w-px h-10 bg-botanical-text/10"></div>
+                        <div>
+                            <label className="block text-sm font-semibold mb-2">🎭 氛围情绪 (Mood)</label>
+                            <div className="flex gap-2">
+                                {[
+                                    { s: 1, e: '😞', label: '低落', color: 'bg-indigo-100 text-indigo-700 border-indigo-200 hover:bg-indigo-200' },
+                                    { s: 2, e: '😐', label: '平淡', color: 'bg-stone-100 text-stone-700 border-stone-200 hover:bg-stone-200' },
+                                    { s: 3, e: '🙂', label: '愉快', color: 'bg-green-100 text-green-700 border-green-200 hover:bg-green-200' },
+                                    { s: 4, e: '😄', label: '极佳', color: 'bg-amber-100 text-amber-700 border-amber-200 hover:bg-amber-200' }
+                                ].map(m => (
+                                    <button
+                                        key={m.s}
+                                        type="button"
+                                        onClick={() => setMood(m.s)}
+                                        className={`flex flex-col items-center justify-center w-14 h-14 rounded-xl border transition-all ${mood === m.s ? `${m.color} ring-2 ring-offset-1 ring-${m.color.split('-')[1]}-400 scale-105 shadow-md` : 'bg-white/50 text-stone-400 border-stone-200 hover:bg-white'} `}
+                                        title={`Score: ${m.s}`}
+                                    >
+                                        <span className={`text-2xl ${mood === m.s ? 'grayscale-0' : 'grayscale opacity-60'}`}>{m.e}</span>
+                                        <span className="text-[10px] font-bold mt-0.5">{m.label}</span>
+                                    </button>
+                                ))}
                             </div>
                         </div>
                     </div>
+
                     <div>
-                        <label className="block text-sm font-semibold mb-1">{t('manage.diary')}</label>
-                        <textarea required value={rawText} onChange={e => setRawText(e.target.value)} rows={5} className="w-full bg-white/60 p-2 rounded-lg border border-botanical-text/20 focus:outline-none focus:ring-2 focus:ring-botanical-accent1" />
+                        <label className="block text-sm font-semibold mb-1">{t('manage.diary')} <span className="text-xs font-normal text-stone-500 ml-2">(支持 #标签 或 # 标签 语法提取 / Supports #hashtags)</span></label>
+                        <textarea required value={rawText} onChange={e => setRawText(e.target.value)} rows={5} placeholder="例：今天一起去了 #迪士尼，晚上吃了 # 火锅..." className="w-full bg-white/60 p-2 rounded-lg border border-botanical-text/20 focus:outline-none focus:ring-2 focus:ring-botanical-accent1" />
                     </div>
                     <div className="text-right">
                         <button type="submit" className="bg-botanical-accent1 hover:bg-green-800 text-white px-8 py-3 rounded-xl font-bold transition shadow-lg shrink-0">

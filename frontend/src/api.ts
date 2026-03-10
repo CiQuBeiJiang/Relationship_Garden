@@ -4,6 +4,24 @@ const api = axios.create({
     baseURL: 'http://localhost:8000/api',
 });
 
+export interface Interaction {
+    id: number;
+    person_id: number;
+    date: string;
+    raw_text: string;
+    quality_score: number;
+    mood_score?: number;
+    tags?: string;
+}
+
+export interface InteractionCreate {
+    date: string;
+    raw_text: string;
+    quality_score: number;
+    mood_score?: number;
+    tags?: string;
+}
+
 export interface Person {
     id: number;
     name: string;
@@ -40,4 +58,9 @@ export const verifyContact = async (id: number): Promise<void> => {
 
 export const deleteContact = async (id: number): Promise<void> => {
     await api.delete(`/contacts/${id}`);
+};
+
+export const updateContact = async (id: number, data: Partial<Person>): Promise<Person> => {
+    const response = await api.patch(`/contacts/${id}`, data);
+    return response.data;
 };

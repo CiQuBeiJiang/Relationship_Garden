@@ -3,10 +3,14 @@ from typing import List, Optional
 from datetime import date, datetime
 
 class InteractionBase(BaseModel):
-    date: date
+    date: str
     raw_text: str
     quality_score: int
+    mood_score: Optional[int] = 3
     tags: Optional[str] = None
+
+class InteractionCreate(InteractionBase):
+    pass
 
 class Interaction(InteractionBase):
     id: int

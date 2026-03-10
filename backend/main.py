@@ -99,14 +99,37 @@ def delete_contact(person_id: int, db: Session = Depends(get_db)):
     db.commit()
     return {"status": "success", "message": f"Deleted contact {person_id}"}
 
+@app.patch("/api/contacts/{person_id}", response_model=schemas.Person)
+def update_contact(person_id: int, contact_update: dict, db: Session = Depends(get_db)):
+    """Update contact attributes."""
+    person = db.query(models.Person).filter(models.Person.id == person_id).first()
+    if not person:
+        raise HTTPException(status_code=404, detail="Contact not found")
+        
+    for key, value in contact_update.items():
+        if hasattr(person, key):
+            setattr(person, key, value)
+            
+    # If dynamic text changed, update timestamps manually
+    if "preferences" in contact_update:
+        person.preferences_updated_at = datetime.utcnow()
+    if "similarities_and_differences" in contact_update:
+        person.similarities_updated_at = datetime.utcnow()
+        
+    db.commit()
+    db.refresh(person)
+    return person
+
 @app.post("/api/interactions", response_model=schemas.Interaction)
 def create_interaction(interaction: schemas.InteractionBase, person_id: int, db: Session = Depends(get_db)):
     db_int = models.Interaction(**interaction.model_dump(), person_id=person_id)
     db.add(db_int)
     
     person = db.query(models.Person).filter(models.Person.id == person_id).first()
-    if person and (not person.last_contact_date or interaction.date > person.last_contact_date):
-        person.last_contact_date = interaction.date
+    if person:
+        interaction_date_obj = datetime.strptime(interaction.date, "%Y-%m-%d").date()
+        if not person.last_contact_date or interaction_date_obj > person.last_contact_date:
+            person.last_contact_date = interaction_date_obj
 
     db.commit()
     db.refresh(db_int)
